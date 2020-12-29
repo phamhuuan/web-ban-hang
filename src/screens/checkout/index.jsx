@@ -28,7 +28,8 @@ const CheckoutContainer = () => {
 		};
 		const response = await handlePostRequest(ApiUrl.URL_GetCart, config, {userId});
 		if (response && response.status === 200) {
-			localStorage.setItem('cart', JSON.stringify(response.data.result));
+			sessionStorage.setItem('cart', JSON.stringify(response.data.result));
+			setCart(response.data.result);
 			history.push(location.pathname);
 		} else {
 			getCart(userId);
@@ -45,15 +46,15 @@ const CheckoutContainer = () => {
 		};
 		const response = await handlePostRequest(ApiUrl.URL_GetUserInfoFromToken, config, {token});
 		if (response && response.status === 200) {
-			localStorage.setItem('user', JSON.stringify(response.data.user));
-			localStorage.setItem('token', JSON.stringify(token));
+			sessionStorage.setItem('user', JSON.stringify(response.data.user));
+			sessionStorage.setItem('token', JSON.stringify(token));
 			getCart(response.data.user.id);
 			
 		}
 	}, [getCart]);
 
 	useEffect(() => {
-		let cart = localStorage.getItem('cart');
+		let cart = sessionStorage.getItem('cart');
 		if (cart) {
 			setCart(JSON.parse(cart));
 		}
@@ -72,10 +73,10 @@ const CheckoutContainer = () => {
 				window.location.href = 'https://laravel-login-site.herokuapp.com/administration/login';
 			}
 		} else {
-			if (!localStorage.getItem('token')) {
+			if (!sessionStorage.getItem('token')) {
 				window.location.href = 'https://laravel-login-site.herokuapp.com/administration/login';
 			} else {
-				getCart(JSON.parse(localStorage.getItem('user')).id);
+				getCart(JSON.parse(sessionStorage.getItem('user')).id);
 			}
 		}
 	}, [getCart, getUserInfoFromToken, history, location.pathname, location.search]);

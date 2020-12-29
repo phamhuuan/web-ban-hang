@@ -20,7 +20,8 @@ const CartContainer = () => {
 		};
 		const response = await handlePostRequest(ApiUrl.URL_GetCart, config, {userId});
 		if (response && response.status === 200) {
-			localStorage.setItem('cart', JSON.stringify(response.data.result));
+			sessionStorage.setItem('cart', JSON.stringify(response.data.result));
+			setCart(response.data.result);
 			history.push(location.pathname);
 		} else {
 			getCart(userId);
@@ -35,7 +36,7 @@ const CartContainer = () => {
 			},
 			timeout: 10000,
 		};
-		const response = await handleDeleteRequest(ApiUrl.URL_RemoveFromCart(JSON.parse(localStorage.getItem('user')).id, cart[index]._id), config);
+		const response = await handleDeleteRequest(ApiUrl.URL_RemoveFromCart(JSON.parse(sessionStorage.getItem('user')).id, cart[index]._id), config);
 		if (response && response.status === 200) {
 			cart.splice(index, 1);
 			setCart([...cart]);
@@ -50,7 +51,7 @@ const CartContainer = () => {
 			},
 			timeout: 10000,
 		};
-		const response = await handleDeleteRequest(ApiUrl.URL_RemoveAllFromCart(JSON.parse(localStorage.getItem('user')).id), config);
+		const response = await handleDeleteRequest(ApiUrl.URL_RemoveAllFromCart(JSON.parse(sessionStorage.getItem('user')).id), config);
 		if (response && response.status === 200) {
 			setCart([]);
 		}
@@ -64,21 +65,21 @@ const CartContainer = () => {
 			},
 			timeout: 10000,
 		};
-		const response = await handlePutRequest(ApiUrl.URL_UpdateAmount, config, {id: JSON.parse(localStorage.getItem('user')).id, cartId, amount});
+		const response = await handlePutRequest(ApiUrl.URL_UpdateAmount, config, {id: JSON.parse(sessionStorage.getItem('user')).id, cartId, amount});
 		if (response && response.status === 200) {}
 	};
 
 	const minusOne = (index) => {
 		cart[index].amount--;
 		updateCartAmount(cart[index]._id, cart[index].amount);
-		localStorage.setItem('cart', JSON.stringify(cart));
+		sessionStorage.setItem('cart', JSON.stringify(cart));
 		setCart([...cart]);
 	};
 
 	const addOne = (index) => {
 		cart[index].amount++;
 		updateCartAmount(cart[index]._id, cart[index].amount);
-		localStorage.setItem('cart', JSON.stringify(cart));
+		sessionStorage.setItem('cart', JSON.stringify(cart));
 		setCart([...cart]);
 	}
 
@@ -93,7 +94,7 @@ const CartContainer = () => {
 
 	const onAmountInputBlur = (index) => {
 		updateCartAmount(cart[index]._id, cart[index].amount);
-		localStorage.setItem('cart', JSON.stringify(cart));
+		sessionStorage.setItem('cart', JSON.stringify(cart));
 	};
 
 	const getUserInfoFromToken = useCallback(async (token) => {
@@ -106,8 +107,8 @@ const CartContainer = () => {
 		};
 		const response = await handlePostRequest(ApiUrl.URL_GetUserInfoFromToken, config, {token});
 		if (response && response.status === 200) {
-			localStorage.setItem('user', JSON.stringify(response.data.user));
-			localStorage.setItem('token', JSON.stringify(token));
+			sessionStorage.setItem('user', JSON.stringify(response.data.user));
+			sessionStorage.setItem('token', JSON.stringify(token));
 			getCart(response.data.user.id);
 			
 		}
@@ -121,26 +122,24 @@ const CartContainer = () => {
 				objQuery[x.split('=')[0]] = x.split('=')[1];
 			});
 			if (objQuery.token !== undefined) {
-				localStorage.removeItem('cart');
 				getUserInfoFromToken(objQuery.token);
 			} else {
 				window.location.href = 'https://laravel-login-site.herokuapp.com/administration/login';
 			}
 		} else {
-			if (!localStorage.getItem('token')) {
-				window.location.href = 'https://laravel-login-site.herokuapp.com/administration/login';
+			if (sessionStorage.getItem('token')) {
+				getCart(JSON.parse(sessionStorage.getItem('user')).id);
 			} else {
-				getCart(JSON.parse(localStorage.getItem('user')).id);
+				window.location.href = 'https://laravel-login-site.herokuapp.com/administration/login';
 			}
 		}
-	}, [getCart, getUserInfoFromToken, history, location.pathname, location.search]);
+	}, [getCart, getUserInfoFromToken, location.search]);
 
 	useEffect(() => {
-		let cart = localStorage.getItem('cart');
-		if (cart) {
-			setCart(JSON.parse(cart));
+		if (sessionStorage.getItem('token')) {
+			getCart(JSON.parse(sessionStorage.getItem('user')).id);
 		}
-	}, []);
+	}, [getCart]);
 
 	if (location.search !== '') {
 		return <Loading />;
